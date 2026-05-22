@@ -10,7 +10,7 @@ models:
 
 containers:
   - name: "kimi-k2-6"
-    image: "vllm/vllm-openai:v0.20.1-ubuntu2404@sha256:a36517a2adbf237be1f6c6fe5a69febf548141ad37debeb929b78807f2f35e3f"
+    image: "vllm/vllm-openai:v0.21.0-ubuntu2404@sha256:45c2a37d44f68333c4f9ae51499baff54680d5e95b2c20799ca0f76afd09d461"
     runtime: nvidia
     gpus: all
     ipc: host
@@ -27,6 +27,9 @@ containers:
       "--trust-remote-code",
       "--port", "8001",
       "--scheduling-policy", "priority",
+      "--enable-chunked-prefill",
+      "--enable-prefix-caching",
+      "--prefix-caching-hash-algo", "sha256"
     ]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8001/health"]
