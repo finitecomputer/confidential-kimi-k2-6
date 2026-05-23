@@ -5,8 +5,8 @@ memory: 524288
 
 models:
   - name: "kimi-k2-6"
-    repo: "moonshotai/Kimi-K2.6@2b2b88e33c96d813ebb4c83a740252fe08018e3a"
-    mpk: "b9a191a313479bccc692491d74803b2520ae28c90bc440f9c76459d297529956_595205046272_1ea57052-e386-5369-8c4f-853663460858"
+    repo: "moonshotai/Kimi-K2.6@7eb5002f6aadc958aed6a9177b7ed26bb94011bb"
+    mpk: "baf763c7922bbafd337dc3aa86c9059f694169c51b1e0197d0d441aeea51186c_595205046272_7b0f3f16-bf8d-5206-8d14-088929943faf"
 
 containers:
   - name: "kimi-k2-6"
@@ -16,7 +16,7 @@ containers:
     ipc: host
     restart: always
     command: [
-      "--model", "/tinfoil/mpk/mpk-b9a191a313479bccc692491d74803b2520ae28c90bc440f9c76459d297529956",
+      "--model", "/tinfoil/mpk/mpk-baf763c7922bbafd337dc3aa86c9059f694169c51b1e0197d0d441aeea51186c",
       "--tensor-parallel-size", "8",
       "--mm-encoder-tp-mode", "data",
       "--served-model-name", "kimi-k2-6",
