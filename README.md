@@ -30,5 +30,17 @@ Required Tinfoil secrets:
 Set `VLLM_API_KEY` and `VLLM_INTERNAL_API_KEY` to the same value for the first
 limiter rollout.
 
-Keep a rollback commit that restores `shim.upstream-port: 8001` until the
-limiter path has completed non-streaming and streaming canaries.
+Live rollout on 2026-05-26:
+
+- Tinfoil container `kimi-k2-6` is running tag
+  `v2026-05-26-private-limiter`.
+- Relaunch started at `2026-05-26T22:55:58Z`; Tinfoil reported `ready` at
+  `2026-05-26T23:30:56Z`, for 2,098 seconds of downtime.
+- Public raw HTTPS canaries passed for `/health`, non-streaming
+  `/v1/chat/completions`, streaming `/v1/chat/completions`, Core settlement,
+  and revoked-key denial.
+- `tinfoil http` verified requests currently fail with `tcbInfo has expired`;
+  raw HTTPS through the public shim is working.
+
+Keep a rollback commit that restores `shim.upstream-port: 8001` for emergency
+direct-vLLM recovery.
