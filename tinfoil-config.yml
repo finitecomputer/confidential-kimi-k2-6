@@ -31,18 +31,34 @@ containers:
       "--enable-prefix-caching",
       "--prefix-caching-hash-algo", "sha256"
     ]
+    secrets:
+      - VLLM_API_KEY
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8001/health"]
       interval: 30s
       timeout: 5s
       start_period: 60m
 
+  - name: "finite-private-limiter"
+    image: "ghcr.io/finitecomputer/finite-private-limiter:2026-05-26.stream-audit.1@sha256:f113a1b31dd3b25c7ac3978376ba3a263eb0c4f56072bf268aba3f1df6027a15"
+    restart: always
+    env:
+      - LISTEN_ADDR: "0.0.0.0:8002"
+      - FINITE_USAGE_API_URL: "https://finite.computer"
+      - UPSTREAM_BASE_URL: "http://127.0.0.1:8001"
+      - DASHBOARD_URL: "https://finite.computer/dashboard"
+    secrets:
+      - FINITE_USAGE_API_SERVICE_KEY
+      - VLLM_INTERNAL_API_KEY
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+
 shim:
-  upstream-port: 8001
-  authenticated: true
-  authenticated-endpoints:
-    - /v1/chat/completions
-    - /v1/responses
+  upstream-port: 8002
+  authenticated: false
   paths:
     - /v1/chat/completions
     - /v1/responses

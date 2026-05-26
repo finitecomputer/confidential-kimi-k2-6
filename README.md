@@ -9,11 +9,8 @@ Finite Private rollout should use this published digest-pinned limiter image:
 ghcr.io/finitecomputer/finite-private-limiter:2026-05-26.stream-audit.1@sha256:f113a1b31dd3b25c7ac3978376ba3a263eb0c4f56072bf268aba3f1df6027a15
 ```
 
-Package visibility/access still needs fixing before applying the Tinfoil
-config. This machine's GitHub token does not have `read:packages`, and an
-anonymous image inspect returned `401 Unauthorized`, so Tinfoil should not be
-expected to pull this image until the GHCR package is made public or Tinfoil is
-given registry credentials. Then:
+Package visibility/access is now confirmed: anonymous `docker buildx
+imagetools inspect` succeeds against the pinned image. Then:
 
 1. Add a `finite-private-limiter` container listening on `8002`.
 2. Set limiter env:
