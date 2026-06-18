@@ -4,10 +4,19 @@ Current `tinfoil-config.yml` routes the public shim to the Finite Private
 limiter on port `8002`; the limiter forwards admitted requests to vLLM on
 `8001` using the internal vLLM API key.
 
+The config exposes:
+
+- `/live` for limiter process liveness.
+- `/health` and `/ready` for deep readiness. The hardened limiter checks both
+  vLLM and the Finite Core usage API before returning `200`.
+
+The timeout/readiness config ships with the digest-pinned hardened limiter
+image built from `/Users/futurepaul/dev/finite/finitecomputer`.
+
 Finite Private rollout uses this published digest-pinned limiter image:
 
 ```text
-ghcr.io/finitecomputer/finite-private-limiter:2026-05-26.stream-audit.1@sha256:f113a1b31dd3b25c7ac3978376ba3a263eb0c4f56072bf268aba3f1df6027a15
+ghcr.io/finitecomputer/finite-private-limiter:2026-06-18.deep-health.1@sha256:32d357c5d01bfa027381c07b357a4ed96602dabede5656b18907c53beaf16d18
 ```
 
 Package visibility/access is confirmed: anonymous `docker buildx imagetools
