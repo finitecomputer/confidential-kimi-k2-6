@@ -23,11 +23,11 @@ Package visibility/access is confirmed: anonymous `docker buildx imagetools
 inspect` succeeds against the pinned image.
 
 The measured release is
-`https://github.com/finitecomputer/confidential-kimi-k2-6/releases/tag/v2026-05-26-private-limiter`
+`https://github.com/finitecomputer/confidential-kimi-k2-6/releases/tag/v2026-06-18-deep-health-limiter`
 with deployment digest:
 
 ```text
-2326cc66d33b7dac16cd1b424a8fed221411e28924ff1036ede9feb0fa1b09f6
+0a21a95a9042632d7dbd11b83721f04caa823e009f0b834f99029a14b8c3becd
 ```
 
 Required Tinfoil secrets:
@@ -39,9 +39,25 @@ Required Tinfoil secrets:
 Set `VLLM_API_KEY` and `VLLM_INTERNAL_API_KEY` to the same value for the first
 limiter rollout.
 
-Live rollout on 2026-05-26:
+Live rollout on 2026-06-18:
 
 - Tinfoil container `kimi-k2-6` is running tag
+  `v2026-06-18-deep-health-limiter`.
+- First relaunch attempt at `2026-06-18T03:48:46Z` failed because the tag had a
+  plain GitHub Release without measured Tinfoil assets. The measured release was
+  published at `2026-06-18T03:50:44Z`.
+- Relaunch was accepted at `2026-06-18T03:51:04Z`; Tinfoil reported `ready` and
+  public `/health` returned deep limiter readiness at `2026-06-18T04:25:28Z`,
+  for 2,064 seconds from accepted relaunch to ready.
+- Public `/health` returned the hardened limiter readiness payload with both
+  `upstream` and `usageApi` healthy.
+- A negative public chat canary with an intentionally invalid Finite Private key
+  returned `401 invalid_api_key`, proving shim -> limiter -> Core admission.
+  A positive reserve/proxy/settle canary still requires a real canary API key.
+
+Previous live rollout on 2026-05-26:
+
+- Tinfoil container `kimi-k2-6` was running tag
   `v2026-05-26-private-limiter`.
 - Relaunch started at `2026-05-26T22:55:58Z`; Tinfoil reported `ready` at
   `2026-05-26T23:30:56Z`, for 2,098 seconds of downtime.
