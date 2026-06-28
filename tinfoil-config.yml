@@ -36,12 +36,13 @@ containers:
       start_period: 120m
 
   - name: "finite-private-limiter"
-    image: "ghcr.io/finitecomputer/finite-private-limiter:2026-06-18.deep-health.1@sha256:32d357c5d01bfa027381c07b357a4ed96602dabede5656b18907c53beaf16d18"
+    image: "ghcr.io/finitecomputer/finite-private-limiter:2026-06-28.glm52.1@sha256:a6443dd0cb9c8725205bb76f0efc950dafa1a5531857e81b1b4abc3f576a5d63"
     restart: always
     env:
       - LISTEN_ADDR: "0.0.0.0:8002"
       - FINITE_USAGE_API_URL: "https://finite.computer"
       - UPSTREAM_BASE_URL: "http://127.0.0.1:8001"
+      - FINITE_PRIVATE_MODEL: "glm-5-2"
       - DASHBOARD_URL: "https://finite.computer/dashboard"
       - READINESS_TIMEOUT_SECS: "5"
       - FINITE_USAGE_API_TIMEOUT_SECS: "15"
@@ -52,7 +53,7 @@ containers:
       - FINITE_USAGE_API_SERVICE_KEY
       - VLLM_INTERNAL_API_KEY
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8002/health"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8002/live"]
       interval: 30s
       timeout: 5s
       start_period: 120m

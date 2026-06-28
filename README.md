@@ -26,13 +26,13 @@ The config exposes:
 - `/health` and `/ready` for deep readiness. The hardened limiter checks both
   vLLM and the Finite Core usage API before returning `200`.
 
-The timeout/readiness config still ships with the digest-pinned hardened limiter
+The timeout/readiness config ships with the digest-pinned GLM-aware limiter
 image built from `/Users/futurepaul/dev/finite/finitecomputer`.
 
 Finite Private rollout uses this published digest-pinned limiter image:
 
 ```text
-ghcr.io/finitecomputer/finite-private-limiter:2026-06-18.deep-health.1@sha256:32d357c5d01bfa027381c07b357a4ed96602dabede5656b18907c53beaf16d18
+ghcr.io/finitecomputer/finite-private-limiter:2026-06-28.glm52.1@sha256:a6443dd0cb9c8725205bb76f0efc950dafa1a5531857e81b1b4abc3f576a5d63
 ```
 
 Package visibility/access is confirmed: anonymous `docker buildx imagetools
@@ -62,8 +62,9 @@ Use the Finite Private ops runbook in
 
 1. Confirm `tinfoil-config.yml` keeps the GLM/vLLM container on port `8001`,
    the limiter container on port `8002`, and `shim.upstream-port: 8002`.
-2. Confirm the Tinfoil GLM image digest is pinned. Do not release a config that
-   contains the all-zero placeholder digest from upstream source.
+2. Confirm the Tinfoil GLM image digest and limiter image digest are pinned. Do
+   not release a config that contains the all-zero placeholder digest from
+   upstream source.
 3. Trigger this repository's **Tinfoil Release** workflow with a new version tag
    such as `v2026-06-27-glm-5-2-limiter`.
 4. Wait for the measured GitHub Release assets from
@@ -76,6 +77,13 @@ Use the Finite Private ops runbook in
    `scripts/finite_private_ops.sh gate` from the `finitecomputer` repo.
 7. Verify Core shows a settled canary reservation for `glm-5-2`, not a stuck
    reservation.
+
+For the GLM retry after `v2026-06-27-glm-5-2-limiter`, the limiter container
+uses process liveness (`/live`) as the Tinfoil healthcheck, while public
+`/health` and `/ready` remain the deep dependency readiness checks used by
+`wait-ready` and `gate`. The limiter env sets `FINITE_PRIVATE_MODEL=glm-5-2` so
+missing request or upstream response model fields settle against the served GLM
+model rather than the historical Kimi default.
 
 Stop the rollout if:
 
