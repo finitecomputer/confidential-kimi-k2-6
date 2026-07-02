@@ -5,9 +5,11 @@ managed `glm-5-2` Finite Private model through the existing Tinfoil deployment.
 
 The public shim routes to the Finite Private limiter on port `8002`; the
 limiter reserves usage through Core before forwarding admitted requests to vLLM
-on `8001` using the internal vLLM API key. Do not change
-`shim.upstream-port: 8002` for the GLM rollout unless you are intentionally
-bypassing Finite Private admission as an emergency rollback.
+on `8001` using the internal vLLM API key. The shim target must be explicit:
+`shim.upstream-container: finite-private-limiter`. Tinfoil defaults the shim
+target to the first container, and GLM is the first container in this config.
+Do not change `shim.upstream-port: 8002` for the GLM rollout unless you are
+intentionally bypassing Finite Private admission as an emergency rollback.
 
 The GLM model-side config follows Tinfoil's `confidential-glm5-2` `v0.0.14`
 release:
@@ -19,6 +21,13 @@ release:
 - served model name: `glm-5-2`
 - vLLM port: `8001`
 - limiter port: `8002`
+
+The GLM and limiter containers share the closed `model-net` network, and the
+limiter reaches vLLM at `http://glm-5-2:8001`. The limiter is also attached to
+the allowlisted `core-api` network so it can call `https://finite.computer` for
+usage reservations and settlement. Do not use `127.0.0.1` for limiter-to-GLM
+traffic on `cvm-version: 0.10.4`; container-to-container traffic must go through
+a declared network and container name.
 
 The config exposes:
 
@@ -61,7 +70,8 @@ Use the Finite Private ops runbook in
 `/Users/futurepaul/dev/finite/finitecomputer/docs/finite-private-ops.md`.
 
 1. Confirm `tinfoil-config.yml` keeps the GLM/vLLM container on port `8001`,
-   the limiter container on port `8002`, and `shim.upstream-port: 8002`.
+   the limiter container on port `8002`, `shim.upstream-container:
+   finite-private-limiter`, and `shim.upstream-port: 8002`.
 2. Confirm the Tinfoil GLM image digest and limiter image digest are pinned. Do
    not release a config that contains the all-zero placeholder digest from
    upstream source.

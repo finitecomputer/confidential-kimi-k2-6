@@ -8,6 +8,13 @@ models:
     repo: "zai-org/GLM-5.2-FP8@a0b55e88465d1a06afece97bc8d6b366aff39089"
     mpk: "98d8b697173111b91b32a4daafc179bb5d8c5dbcd8fb8732f1f73ffcbc7a9b9f_755663769600_4e76874a-36d8-54fd-a07e-6fc22dd54b6b"
 
+networks:
+  model-net: {}
+  core-api:
+    egress: allowlist
+    allow:
+      - finite.computer
+
 containers:
   - name: "glm-5-2"
     image: "ghcr.io/tinfoilsh/confidential-glm5-2@sha256:8cc690cf5b1c26b0bc14894a7ca27890386b536930b69172678560220572648b" # v0.0.14
@@ -27,6 +34,7 @@ containers:
     tmpfs:
       /tmp: size=512m,mode=1777,exec
       /root: size=20g,mode=0700,exec
+    networks: [model-net]
     secrets:
       - VLLM_API_KEY
     healthcheck:
@@ -41,7 +49,7 @@ containers:
     env:
       - LISTEN_ADDR: "0.0.0.0:8002"
       - FINITE_USAGE_API_URL: "https://finite.computer"
-      - UPSTREAM_BASE_URL: "http://127.0.0.1:8001"
+      - UPSTREAM_BASE_URL: "http://glm-5-2:8001"
       - FINITE_PRIVATE_MODEL: "glm-5-2"
       - DASHBOARD_URL: "https://finite.computer/dashboard"
       - READINESS_TIMEOUT_SECS: "5"
@@ -52,6 +60,7 @@ containers:
     secrets:
       - FINITE_USAGE_API_SERVICE_KEY
       - VLLM_INTERNAL_API_KEY
+    networks: [model-net, core-api]
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8002/live"]
       interval: 30s
@@ -59,6 +68,7 @@ containers:
       start_period: 120m
 
 shim:
+  upstream-container: finite-private-limiter
   upstream-port: 8002
   authenticated: false
   paths:
