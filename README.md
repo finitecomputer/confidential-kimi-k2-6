@@ -32,7 +32,7 @@ image built from `/Users/futurepaul/dev/finite/finitecomputer`.
 Finite Private rollout uses this published digest-pinned limiter image:
 
 ```text
-ghcr.io/finitecomputer/finite-private-limiter:2026-06-28.glm52.1@sha256:a6443dd0cb9c8725205bb76f0efc950dafa1a5531857e81b1b4abc3f576a5d63
+ghcr.io/finitecomputer/finite-private-limiter:2026-07-02.glm52.health.1@sha256:f977b238439ff4caa3f416bf1ec8f16ed383640d7417262d26ed4388c8624d5c
 ```
 
 Package visibility/access is confirmed: anonymous `docker buildx imagetools
