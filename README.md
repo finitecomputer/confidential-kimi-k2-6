@@ -1,8 +1,33 @@
 # confidential-kimi-k2-6
 
-Current `tinfoil-config.yml` routes the public shim to the Finite Private
-limiter on port `8002`; the limiter forwards admitted requests to vLLM on
-`8001` using the internal vLLM API key.
+This repository name is historical. Current `tinfoil-config.yml` serves the
+managed `glm-5-2` Finite Private model through the existing Tinfoil deployment.
+
+The public shim routes to the Finite Private limiter on port `8002`; the
+limiter reserves usage through Core before forwarding admitted requests to vLLM
+on `8001` using the internal vLLM API key. The shim target must be explicit:
+`shim.upstream-container: finite-private-limiter`. Tinfoil defaults the shim
+target to the first container, and GLM is the first container in this config.
+Do not change `shim.upstream-port: 8002` for the GLM rollout unless you are
+intentionally bypassing Finite Private admission as an emergency rollback.
+
+The GLM model-side config follows Tinfoil's `confidential-glm5-2` `v0.0.14`
+release:
+
+- `cvm-version: 0.10.4`
+- model repo: `zai-org/GLM-5.2-FP8@a0b55e88465d1a06afece97bc8d6b366aff39089`
+- image:
+  `ghcr.io/tinfoilsh/confidential-glm5-2@sha256:8cc690cf5b1c26b0bc14894a7ca27890386b536930b69172678560220572648b`
+- served model name: `glm-5-2`
+- vLLM port: `8001`
+- limiter port: `8002`
+
+The GLM and limiter containers share the closed `model-net` network, and the
+limiter reaches vLLM at `http://glm-5-2:8001`. The limiter is also attached to
+the allowlisted `core-api` network so it can call `https://finite.computer` for
+usage reservations and settlement. Do not use `127.0.0.1` for limiter-to-GLM
+traffic on `cvm-version: 0.10.4`; container-to-container traffic must go through
+a declared network and container name.
 
 The config exposes:
 
@@ -10,19 +35,19 @@ The config exposes:
 - `/health` and `/ready` for deep readiness. The hardened limiter checks both
   vLLM and the Finite Core usage API before returning `200`.
 
-The timeout/readiness config ships with the digest-pinned hardened limiter
+The timeout/readiness config ships with the digest-pinned GLM-aware limiter
 image built from `/Users/futurepaul/dev/finite/finitecomputer`.
 
 Finite Private rollout uses this published digest-pinned limiter image:
 
 ```text
-ghcr.io/finitecomputer/finite-private-limiter:2026-06-18.deep-health.1@sha256:32d357c5d01bfa027381c07b357a4ed96602dabede5656b18907c53beaf16d18
+ghcr.io/finitecomputer/finite-private-limiter:2026-07-02.glm52.health.1@sha256:f977b238439ff4caa3f416bf1ec8f16ed383640d7417262d26ed4388c8624d5c
 ```
 
 Package visibility/access is confirmed: anonymous `docker buildx imagetools
 inspect` succeeds against the pinned image.
 
-The measured release is
+The latest measured Kimi limiter release was
 `https://github.com/finitecomputer/confidential-kimi-k2-6/releases/tag/v2026-06-18-deep-health-limiter`
 with deployment digest:
 
@@ -39,7 +64,47 @@ Required Tinfoil secrets:
 Set `VLLM_API_KEY` and `VLLM_INTERNAL_API_KEY` to the same value for the first
 limiter rollout.
 
-Live rollout on 2026-06-18:
+## GLM 5.2 Rollout
+
+Use the Finite Private ops runbook in
+`/Users/futurepaul/dev/finite/finitecomputer/docs/finite-private-ops.md`.
+
+1. Confirm `tinfoil-config.yml` keeps the GLM/vLLM container on port `8001`,
+   the limiter container on port `8002`, `shim.upstream-container:
+   finite-private-limiter`, and `shim.upstream-port: 8002`.
+2. Confirm the Tinfoil GLM image digest and limiter image digest are pinned. Do
+   not release a config that contains the all-zero placeholder digest from
+   upstream source.
+3. Trigger this repository's **Tinfoil Release** workflow with a new version tag
+   such as `v2026-06-27-glm-5-2-limiter`.
+4. Wait for the measured GitHub Release assets from
+   `tinfoil-release-publish.yml`; do not relaunch from a plain tag without
+   measured Tinfoil assets.
+5. From the `finitecomputer` repo, relaunch the existing live Tinfoil
+   deployment to the measured tag:
+   `scripts/finite_private_ops.sh relaunch TAG`.
+6. Run `scripts/finite_private_ops.sh wait-ready`, then
+   `scripts/finite_private_ops.sh gate` from the `finitecomputer` repo.
+7. Verify Core shows a settled canary reservation for `glm-5-2`, not a stuck
+   reservation.
+
+For the GLM retry after `v2026-06-27-glm-5-2-limiter`, the limiter container
+uses process liveness (`/live`) as the Tinfoil healthcheck, while public
+`/health` and `/ready` remain the deep dependency readiness checks used by
+`wait-ready` and `gate`. The limiter env sets `FINITE_PRIVATE_MODEL=glm-5-2` so
+missing request or upstream response model fields settle against the served GLM
+model rather than the historical Kimi default.
+
+Stop the rollout if:
+
+- the release lacks `tinfoil-deployment.json` or `tinfoil.hash`;
+- Tinfoil cannot measure the GLM-plus-limiter config;
+- `/health` does not report both upstream vLLM and Core usage API readiness;
+- the authenticated canary does not settle in Core;
+- relaunch would require changing the outer Tinfoil deployment name instead of
+  relaunching the existing deployment.
+
+Previous live rollout on 2026-06-18:
 
 - Tinfoil container `kimi-k2-6` is running tag
   `v2026-06-18-deep-health-limiter`.
@@ -67,5 +132,5 @@ Previous live rollout on 2026-05-26:
 - `tinfoil http` verified requests currently fail with `tcbInfo has expired`;
   raw HTTPS through the public shim is working.
 
-Keep a rollback commit that restores `shim.upstream-port: 8001` for emergency
-direct-vLLM recovery.
+Keep a rollback commit that restores the last known-good Kimi config, or, in an
+emergency only, restores `shim.upstream-port: 8001` for direct-vLLM recovery.
