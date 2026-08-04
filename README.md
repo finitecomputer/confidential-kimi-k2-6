@@ -3,6 +3,14 @@
 This repository name is historical. Current `tinfoil-config.yml` serves the
 managed `glm-5-2` Finite Private model through the existing Tinfoil deployment.
 
+> **Branch status (2026-08-04): measured but rejected.** The vLLM 0.26.0
+> candidate reached deep readiness and passed single-request/protocol checks,
+> but the 32-sequence release restarted during a 32-way load test and this
+> 16-sequence release restarted during its first 8-way load test. Production
+> was restored to measured tag `v2026-07-02-glm-5-2-limiter-routing-1`. Keep
+> this branch and both measured tags as failure evidence; do not promote them
+> without a root-cause fix and fresh load proof.
+
 The public shim routes to the Finite Private limiter on port `8002`; the
 limiter reserves usage through Core before forwarding admitted requests to vLLM
 on `8001` using the internal vLLM API key. The shim target must be explicit:
@@ -19,9 +27,9 @@ release:
 - image:
   `ghcr.io/tinfoilsh/confidential-glm5-2@sha256:387c1ce5c64e31cc895d25cc73d96469ba61a8a3047414c1cbf0f00cfd5d578a`
 - patched vLLM version: `0.26.0`
-- KV cache: FP8; maximum active sequences: `16`. The initial vLLM 0.26
-  production canary at 32 caused the GLM worker to restart, so 32 is not an
-  accepted serving ceiling for this image.
+- KV cache: FP8; maximum active sequences: `16` in the second measured attempt.
+  Both 32 and 16 are rejected serving configurations based on the production
+  evidence above.
 - served model name: `glm-5-2`
 - vLLM port: `8001`
 - limiter port: `8002`
