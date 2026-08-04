@@ -19,7 +19,9 @@ release:
 - image:
   `ghcr.io/tinfoilsh/confidential-glm5-2@sha256:387c1ce5c64e31cc895d25cc73d96469ba61a8a3047414c1cbf0f00cfd5d578a`
 - patched vLLM version: `0.26.0`
-- KV cache: FP8; maximum active sequences: `32`
+- KV cache: FP8; maximum active sequences: `16`. The initial vLLM 0.26
+  production canary at 32 caused the GLM worker to restart, so 32 is not an
+  accepted serving ceiling for this image.
 - served model name: `glm-5-2`
 - vLLM port: `8001`
 - limiter port: `8002`
