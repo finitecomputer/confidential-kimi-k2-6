@@ -10,6 +10,10 @@ models:
 
 networks:
   model-net: {}
+  core-api:
+    egress: allowlist
+    allow:
+      - finite.computer
 
 containers:
   - name: "deepseek-v4-flash-0731"
@@ -52,7 +56,7 @@ containers:
         "--max-model-len",
         "393216",
         "--max-num-seqs",
-        "256",
+        "64",
         "--max-num-batched-tokens",
         "8192",
         "--gpu-memory-utilization",
@@ -65,20 +69,47 @@ containers:
       /tmp: size=512m,mode=1777,exec
       /root: size=20g,mode=0700,exec
     networks: [model-net]
+    secrets:
+      - VLLM_API_KEY
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8001/health"]
       interval: 30s
       timeout: 5s
-      start_period: 20m
+      start_period: 45m
+
+  - name: "finite-private-limiter"
+    # Retain the measured production limiter; this remains a model-only cutover.
+    image: "ghcr.io/finitecomputer/finite-private-limiter:2026-07-02.glm52.health.1@sha256:f977b238439ff4caa3f416bf1ec8f16ed383640d7417262d26ed4388c8624d5c"
+    restart: always
+    env:
+      - LISTEN_ADDR: "0.0.0.0:8002"
+      - FINITE_USAGE_API_URL: "https://finite.computer"
+      - UPSTREAM_BASE_URL: "http://deepseek-v4-flash-0731:8001"
+      - FINITE_PRIVATE_MODEL: "glm-5-2"
+      - DASHBOARD_URL: "https://finite.computer/dashboard"
+      - READINESS_TIMEOUT_SECS: "5"
+      - FINITE_USAGE_API_TIMEOUT_SECS: "15"
+      - UPSTREAM_FIRST_BYTE_TIMEOUT_SECS: "120"
+      - UPSTREAM_BODY_TIMEOUT_SECS: "600"
+      - UPSTREAM_STREAM_IDLE_TIMEOUT_SECS: "600"
+    secrets:
+      - FINITE_USAGE_API_SERVICE_KEY
+      - VLLM_INTERNAL_API_KEY
+    networks: [model-net, core-api]
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8002/live"]
+      interval: 30s
+      timeout: 5s
+      start_period: 45m
 
 shim:
-  # Debug-only release: route directly to vLLM and bind no production secrets.
-  upstream-container: deepseek-v4-flash-0731
-  upstream-port: 8001
+  upstream-container: finite-private-limiter
+  upstream-port: 8002
   authenticated: false
   paths:
     - /v1/chat/completions
     - /v1/responses
-    - /v1/models
     - /metrics
+    - /live
     - /health
+    - /ready
