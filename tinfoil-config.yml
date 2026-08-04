@@ -63,6 +63,8 @@ containers:
         "--no-enable-flashinfer-autotune",
         "--compilation-config",
         '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY"}',
+        "--speculative-config",
+        '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"greedy"}',
       ]
     tmpfs:
       /tmp: size=512m,mode=1777,exec
