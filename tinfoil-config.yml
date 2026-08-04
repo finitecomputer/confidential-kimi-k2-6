@@ -33,6 +33,7 @@ containers:
         "--tensor-parallel-size",
         "8",
         "--enable-expert-parallel",
+        "--disable-custom-all-reduce",
         "--tokenizer-mode",
         "deepseek_v4",
         "--tool-call-parser",
