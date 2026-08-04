@@ -1,4 +1,4 @@
-cvm-version: 0.10.4
+cvm-version: 0.10.8
 cpus: 32
 memory: 524288
 gpus: 8
@@ -17,7 +17,7 @@ networks:
 
 containers:
   - name: "glm-5-2"
-    image: "ghcr.io/tinfoilsh/confidential-glm5-2@sha256:8cc690cf5b1c26b0bc14894a7ca27890386b536930b69172678560220572648b" # v0.0.14
+    image: "ghcr.io/tinfoilsh/confidential-glm5-2@sha256:387c1ce5c64e31cc895d25cc73d96469ba61a8a3047414c1cbf0f00cfd5d578a" # upstream v0.0.19, commit b9988c3
     runtime: nvidia
     gpus: all
     restart: always
@@ -25,12 +25,45 @@ containers:
       - PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
       - RUNAI_STREAMER_MEMORY_LIMIT: "4294967296"
       - RUNAI_STREAMER_CONCURRENCY: "8"
-    command: ["--model", "/tinfoil/mpk/mpk-98d8b697173111b91b32a4daafc179bb5d8c5dbcd8fb8732f1f73ffcbc7a9b9f", "--kv-cache-dtype",
-      "fp8", "--tensor-parallel-size", "8", "--decode-context-parallel-size", "8", "--dcp-sparse-indexer-mode", "union", "--attention-backend", "FLASHMLA_SPARSE",
-      "--tool-call-parser", "glm47", "--enable-auto-tool-choice", "--reasoning-parser", "glm45", "--served-model-name",
-      "glm-5-2", "--scheduling-policy", "priority", "--port", "8001", "--load-format", "runai_streamer",
-      "--disable-custom-all-reduce", "--max-model-len", "393216",
-      "--speculative-config", "{\"method\":\"mtp\",\"num_speculative_tokens\":5}"]
+      - VLLM_ALLREDUCE_USE_SYMM_MEM: "0"
+    command:
+      [
+        "--model",
+        "/tinfoil/mpk/mpk-98d8b697173111b91b32a4daafc179bb5d8c5dbcd8fb8732f1f73ffcbc7a9b9f",
+        "--kv-cache-dtype",
+        "fp8",
+        "--tensor-parallel-size",
+        "8",
+        "--decode-context-parallel-size",
+        "8",
+        "--dcp-sparse-indexer-mode",
+        "union",
+        "--attention-backend",
+        "FLASHMLA_SPARSE",
+        "--tool-call-parser",
+        "glm47",
+        "--enable-auto-tool-choice",
+        "--enable-prompt-tokens-details",
+        "--reasoning-parser",
+        "glm45",
+        "--served-model-name",
+        "glm-5-2",
+        "--scheduling-policy",
+        "priority",
+        "--port",
+        "8001",
+        "--load-format",
+        "runai_streamer",
+        "--disable-custom-all-reduce",
+        "--compilation-config",
+        '{"pass_config":{"fuse_allreduce_rms":false}}',
+        "--max-model-len",
+        "393216",
+        "--max-num-seqs",
+        "16",
+        "--speculative-config",
+        '{"method":"mtp","num_speculative_tokens":5}',
+      ]
     tmpfs:
       /tmp: size=512m,mode=1777,exec
       /root: size=20g,mode=0700,exec
@@ -44,7 +77,8 @@ containers:
       start_period: 120m
 
   - name: "finite-private-limiter"
-    image: "ghcr.io/finitecomputer/finite-private-limiter:2026-07-02.glm52.health.1@sha256:f977b238439ff4caa3f416bf1ec8f16ed383640d7417262d26ed4388c8624d5c"
+    # 2026-07-21.1, source cafe85246bce88201c23a46ec7b33c8e28cc25e4.
+    image: "ghcr.io/finitecomputer/private-limiter@sha256:5d57ecf462fcb105eae2160dd01493efd825532fb61ee286098bdc1b485ec84b"
     restart: always
     env:
       - LISTEN_ADDR: "0.0.0.0:8002"

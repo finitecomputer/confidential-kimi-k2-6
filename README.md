@@ -3,6 +3,14 @@
 This repository name is historical. Current `tinfoil-config.yml` serves the
 managed `glm-5-2` Finite Private model through the existing Tinfoil deployment.
 
+> **Branch status (2026-08-04): measured but rejected.** The vLLM 0.26.0
+> candidate reached deep readiness and passed single-request/protocol checks,
+> but the 32-sequence release restarted during a 32-way load test and this
+> 16-sequence release restarted during its first 8-way load test. Production
+> was restored to measured tag `v2026-07-02-glm-5-2-limiter-routing-1`. Keep
+> this branch and both measured tags as failure evidence; do not promote them
+> without a root-cause fix and fresh load proof.
+
 The public shim routes to the Finite Private limiter on port `8002`; the
 limiter reserves usage through Core before forwarding admitted requests to vLLM
 on `8001` using the internal vLLM API key. The shim target must be explicit:
@@ -11,13 +19,17 @@ target to the first container, and GLM is the first container in this config.
 Do not change `shim.upstream-port: 8002` for the GLM rollout unless you are
 intentionally bypassing Finite Private admission as an emergency rollback.
 
-The GLM model-side config follows Tinfoil's `confidential-glm5-2` `v0.0.14`
+The GLM model-side config follows Tinfoil's `confidential-glm5-2` `v0.0.19`
 release:
 
-- `cvm-version: 0.10.4`
+- `cvm-version: 0.10.8`
 - model repo: `zai-org/GLM-5.2-FP8@a0b55e88465d1a06afece97bc8d6b366aff39089`
 - image:
-  `ghcr.io/tinfoilsh/confidential-glm5-2@sha256:8cc690cf5b1c26b0bc14894a7ca27890386b536930b69172678560220572648b`
+  `ghcr.io/tinfoilsh/confidential-glm5-2@sha256:387c1ce5c64e31cc895d25cc73d96469ba61a8a3047414c1cbf0f00cfd5d578a`
+- patched vLLM version: `0.26.0`
+- KV cache: FP8; maximum active sequences: `16` in the second measured attempt.
+  Both 32 and 16 are rejected serving configurations based on the production
+  evidence above.
 - served model name: `glm-5-2`
 - vLLM port: `8001`
 - limiter port: `8002`
@@ -26,7 +38,7 @@ The GLM and limiter containers share the closed `model-net` network, and the
 limiter reaches vLLM at `http://glm-5-2:8001`. The limiter is also attached to
 the allowlisted `core-api` network so it can call `https://finite.computer` for
 usage reservations and settlement. Do not use `127.0.0.1` for limiter-to-GLM
-traffic on `cvm-version: 0.10.4`; container-to-container traffic must go through
+traffic on `cvm-version: 0.10.8`; container-to-container traffic must go through
 a declared network and container name.
 
 The config exposes:
@@ -35,13 +47,13 @@ The config exposes:
 - `/health` and `/ready` for deep readiness. The hardened limiter checks both
   vLLM and the Finite Core usage API before returning `200`.
 
-The timeout/readiness config ships with the digest-pinned GLM-aware limiter
-image built from `/Users/futurepaul/dev/finite/finitecomputer`.
+The timeout/readiness config ships with the digest-pinned limiter built from
+the canonical `finite-mono` source.
 
 Finite Private rollout uses this published digest-pinned limiter image:
 
 ```text
-ghcr.io/finitecomputer/finite-private-limiter:2026-07-02.glm52.health.1@sha256:f977b238439ff4caa3f416bf1ec8f16ed383640d7417262d26ed4388c8624d5c
+ghcr.io/finitecomputer/private-limiter@sha256:5d57ecf462fcb105eae2160dd01493efd825532fb61ee286098bdc1b485ec84b
 ```
 
 Package visibility/access is confirmed: anonymous `docker buildx imagetools
@@ -66,8 +78,8 @@ limiter rollout.
 
 ## GLM 5.2 Rollout
 
-Use the Finite Private ops runbook in
-`/Users/futurepaul/dev/finite/finitecomputer/docs/finite-private-ops.md`.
+Use `infra/runbooks/finite-private-ops.sh` and the checked-in Finite Private
+runbooks from `finite-mono`.
 
 1. Confirm `tinfoil-config.yml` keeps the GLM/vLLM container on port `8001`,
    the limiter container on port `8002`, `shim.upstream-container:
