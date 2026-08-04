@@ -3,6 +3,12 @@
 This repository name is historical. Current `tinfoil-config.yml` serves the
 managed `glm-5-2` Finite Private model through the existing Tinfoil deployment.
 
+> **DeepSeek branch status (2026-08-04): preserved for a later attempt.** The
+> measured DeepSeek V4 Flash 0731 releases and their production evidence remain
+> on this branch, but production was deliberately restored to measured GLM tag
+> `v2026-07-02-glm-5-2-limiter-routing-1`. Do not merge this branch while GLM
+> remains the production authority.
+
 The public shim routes to the Finite Private limiter on port `8002`; the
 limiter reserves usage through Core before forwarding admitted requests to vLLM
 on `8001` using the internal vLLM API key. The shim target must be explicit:
