@@ -48,6 +48,8 @@ containers:
         "--enable-auto-tool-choice",
         "--reasoning-parser",
         "deepseek_v4",
+        "--default-chat-template-kwargs",
+        '{"enable_thinking":true}',
         "--enable-prompt-tokens-details",
         "--served-model-name",
         "deepseek-v4-flash-0731",
