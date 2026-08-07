@@ -16,7 +16,9 @@ networks:
 
 containers:
   - name: "gpu-lab"
-    image: "ghcr.io/finitecomputer/deepseek-v4-vllm:0.25.1-0731-reasoning.6@sha256:48716fa9c25605ab5fe00fd7eed4e792268aee6c9008616f7641d9bf622ff262"
+    # Official CUDA 13 Inkling build, pinned to the linux/amd64 manifest.
+    # This lab release remains debug-only and carries no production secrets.
+    image: "vllm/vllm-openai:inkling@sha256:9b001250ef36000b7075327656485a0dfc248e9bc69c855283a8f0690d9b26ba"
     entrypoint: ["/bin/sh", "-c"]
     command: ["sleep infinity"]
     runtime: nvidia
