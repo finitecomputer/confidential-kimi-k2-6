@@ -16,9 +16,9 @@ networks:
 
 containers:
   - name: "gpu-lab"
-    # Official vLLM 0.26 CUDA 13 build, pinned to the linux/amd64 manifest.
+    # Official vLLM nightly CUDA 13 build, pinned to the linux/amd64 manifest.
     # This lab release remains debug-only and carries no production secrets.
-    image: "vllm/vllm-openai:v0.26.0@sha256:770fe65b2c73ee74a5c42165cf3433de4048cc2cd9c57a937ca4e35aba5aa87b"
+    image: "vllm/vllm-openai:nightly@sha256:6877023dee3a2456e00f468813607fd4ec21cd92c6386e5433e2f7422bf087a8"
     entrypoint: ["/bin/sh", "-c"]
     command: ["sleep infinity"]
     runtime: nvidia
