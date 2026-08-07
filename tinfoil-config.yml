@@ -16,9 +16,9 @@ networks:
 
 containers:
   - name: "gpu-lab"
-    # Official CUDA 13 Inkling build, pinned to the linux/amd64 manifest.
+    # Official vLLM 0.26 CUDA 13 build, pinned to the linux/amd64 manifest.
     # This lab release remains debug-only and carries no production secrets.
-    image: "vllm/vllm-openai:inkling@sha256:9b001250ef36000b7075327656485a0dfc248e9bc69c855283a8f0690d9b26ba"
+    image: "vllm/vllm-openai:v0.26.0@sha256:770fe65b2c73ee74a5c42165cf3433de4048cc2cd9c57a937ca4e35aba5aa87b"
     entrypoint: ["/bin/sh", "-c"]
     command: ["sleep infinity"]
     runtime: nvidia
