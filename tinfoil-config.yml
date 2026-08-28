@@ -7,7 +7,7 @@ cpus: 2
 memory: 2048
 
 networks:
-  finite-private-upstream:
+  fp-upstream:
     egress: allowlist
     allow:
       - finite-private.finite.containers.tinfoil.dev
@@ -26,7 +26,7 @@ containers:
         "https://finite-private.finite.containers.tinfoil.dev",
         "--change-host-header",
       ]
-    networks: [finite-private-upstream]
+    networks: [fp-upstream]
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8000/live"]
       interval: 30s
