@@ -28,10 +28,10 @@ containers:
       ]
     networks: [fp-upstream]
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:2019/config/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8000/live"]
       interval: 30s
       timeout: 5s
-      start_period: 30s
+      start_period: 50m
 
 shim:
   upstream-container: finite-private-compatibility-bridge
